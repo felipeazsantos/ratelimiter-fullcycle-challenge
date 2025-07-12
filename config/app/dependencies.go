@@ -1,24 +1,34 @@
 package app
 
 import (
+	"net/http"
+
 	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/config/getenv"
-	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/config/redisdb"
+	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/domain"
 	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/entrypoint"
+	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/middleware"
 	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/repository"
-	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/usecase/limiter"
+	usecase "github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/usecase/limiter"
 	"github.com/go-chi/chi/v5"
+	"github.com/redis/go-redis/v9"
 )
 
-type Application struct {
-	Config *getenv.AppConfig
-}
+func StartDependencies(router chi.Router, rdb *redis.Client) error {
+	config := getenv.AppConfig
+	rl := domain.NewRateLimiter(
+		config.IPRateLimiterMaxRequest,
+		config.IPRateLimiterBlockTime,
+		config.TokenRateLimiterMaxRequest,
+		config.TokenRateLimiterBlockTime,
+	)
 
-func StartDependencies(router chi.Router) error {
-	rdb := redisdb.NewRedisClient()
 	redisRepo := repository.NewRedisRepository(rdb)
-	limiterUseCase := limiter.NewRateLimiter(redisRepo)
-	limiterHandle := entrypoint.NewRateLimiterHandle(limiterUseCase)
+	limiterUseCase := usecase.NewRateLimiter(redisRepo, rl)
+	limiterHandle := entrypoint.NewRateLimiterHandle()
 
+	router.Use(func(next http.Handler) http.Handler {
+		return middleware.RateLimiterMiddleware(limiterUseCase, next)
+	})
 	router.Get("/", limiterHandle.Handle)
 
 	return nil

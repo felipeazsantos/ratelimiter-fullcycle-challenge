@@ -1,21 +1,42 @@
 package repository
 
-import "github.com/redis/go-redis/v9"
+import (
+	"context"
+	"time"
 
-type redisLimiter struct{}
+	"github.com/redis/go-redis/v9"
+)
 
-func NewRedisRepository(rdb *redis.Client) IRepositoryLimiter {
-	return &redisLimiter{}
+type redisLimiterRepository struct {
+	RClient *redis.Client
 }
 
-func (r *redisLimiter) Save() error {
-	return nil
+func NewRedisRepository(rdb *redis.Client) IRateLimiterRepository {
+	return &redisLimiterRepository{}
 }
 
-func (r *redisLimiter) GetByIp() error {
-	return nil
+func (r *redisLimiterRepository) AllowToken(ctx context.Context, key string, tokenMaxRequest, tokenBlockTime int) (bool, error) {
+	pipe := r.RClient.TxPipeline()
+
+	incr := pipe.Incr(ctx, key)
+
+	pipe.Expire(ctx, key, time.Duration(tokenBlockTime))
+	if _, err := pipe.Exec(ctx); err != nil {
+		return false, err
+	}
+
+	return incr.Val() <= int64(tokenMaxRequest), nil
 }
 
-func (r *redisLimiter) GetByToken() error {
-	return nil
+func (r *redisLimiterRepository) AllowIP(ctx context.Context, key string, ipMaxRequest, ipBlockTime int) (bool, error) {
+	pipe := r.RClient.TxPipeline()
+
+	incr := pipe.Incr(ctx, key)
+
+	pipe.Expire(ctx, key, time.Duration(ipBlockTime))
+	if _, err := pipe.Exec(ctx); err != nil {
+		return false, err
+	}
+
+	return incr.Val() <= int64(ipMaxRequest), nil
 }

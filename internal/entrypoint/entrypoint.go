@@ -1,23 +1,17 @@
 package entrypoint
 
 import (
+	"fmt"
 	"net/http"
-
-	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/usecase/limiter"
 )
 
+type RateLimiterHandle struct{}
 
-type RateLimiterHandle struct {
-	UseCase *limiter.RateLimiterUseCase
-}
-
-
-func NewRateLimiterHandle(usecase *limiter.RateLimiterUseCase) *RateLimiterHandle {
-	return &RateLimiterHandle{
-		UseCase: usecase,
-	}
+func NewRateLimiterHandle() *RateLimiterHandle {
+	return &RateLimiterHandle{}
 }
 
 func (handle *RateLimiterHandle) Handle(w http.ResponseWriter, r *http.Request) {
-	
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "request was done successfully")
 }

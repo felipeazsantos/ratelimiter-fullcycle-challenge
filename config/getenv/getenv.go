@@ -1,24 +1,21 @@
 package getenv
 
-import "github.com/spf13/viper"
-
-
-type AppConfig struct {
-	IPRateLimiterMaxRequest int `mapstructure:"RATE_LIMITER_IP_MAX_REQUESTS"`
-	IPRateLimiterBlockTime int `mapstructure:"RATE_LIMITER_IP_BLOCK_TIME"`
-	TokenRateLimiterMaxRequest int `mapstructure:"RATE_LIMITER_TOKEN_MAX_REQUESTS"`
-	TokenRateLimiterBlockTime int `mapstructure:"RATE_LIMITER_TOKEN_BLOCK_TIME"`
-	RedisAddr string `mapstructure:"REDIS_ADDR"`
-}
-
-var (
-	IPRateLimiterMaxRequest, IPRateLimiterBlockTime, TokenRateLimiterMaxRequest, TokenRateLimiterBlockTime int
-	RedisAddr string
+import (
+	"github.com/spf13/viper"
 )
 
+type appConfig struct {
+	IPRateLimiterMaxRequest    int    `mapstructure:"RATE_LIMITER_IP_MAX_REQUESTS"`
+	IPRateLimiterBlockTime     int    `mapstructure:"RATE_LIMITER_IP_BLOCK_TIME"`
+	TokenRateLimiterMaxRequest int    `mapstructure:"RATE_LIMITER_TOKEN_MAX_REQUESTS"`
+	TokenRateLimiterBlockTime  int    `mapstructure:"RATE_LIMITER_TOKEN_BLOCK_TIME"`
+	RedisAddr                  string `mapstructure:"REDIS_ADDR"`
+}
 
-func LoadConfig(path string) (*AppConfig, error) {
-	config := &AppConfig{}
+var AppConfig *appConfig
+
+func InitConfig(path string) error {
+	config := &appConfig{}
 
 	viper.SetConfigFile(path)
 	viper.SetConfigType("env")
@@ -26,8 +23,10 @@ func LoadConfig(path string) (*AppConfig, error) {
 	viper.AutomaticEnv()
 
 	if err := viper.Unmarshal(&config); err != nil {
-		return nil, err
+		return err
 	}
 
-	return config, nil
+	AppConfig = config
+
+	return nil
 }

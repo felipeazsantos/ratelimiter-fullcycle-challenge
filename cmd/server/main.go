@@ -6,13 +6,22 @@ import (
 	"net/http"
 
 	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/config/app"
+	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/config/getenv"
+	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/config/redisdb"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
+	if err := getenv.InitConfig(".env"); err != nil {
+		log.Fatal("unable to load app config: ", err)
+	}
+
 	router := chi.NewRouter()
 
-	if err := app.StartDependencies(router); err != nil {
+	rdb := redisdb.NewRedisClient()
+	defer rdb.Close()
+
+	if err := app.StartDependencies(router, rdb); err != nil {
 		log.Fatal("failed to start dependencies: ", err)
 	}
 
