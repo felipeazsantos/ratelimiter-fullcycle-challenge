@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 
 	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/domain"
@@ -36,7 +37,7 @@ func (useCase *RateLimiterUseCase) Execute(w http.ResponseWriter, r *http.Reques
 		return isAllowedToken, nil
 	}
 
-	clientIP := r.RemoteAddr
+	clientIP, _, _ := net.SplitHostPort(r.RemoteAddr)
 	isAllowedIP, err := useCase.Repo.AllowIP(
 		useCase.RateLimiter.Context,
 		clientIP,
