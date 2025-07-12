@@ -23,7 +23,7 @@ func StartDependencies(router chi.Router, rdb *redis.Client) error {
 	)
 
 	redisRepo := repository.NewRedisRepository(rdb)
-	limiterUseCase := usecase.NewRateLimiter(redisRepo, rl)
+	limiterUseCase := usecase.NewRateLimiterUseCase(redisRepo, rl)
 	limiterHandle := entrypoint.NewRateLimiterHandle()
 
 	router.Use(func(next http.Handler) http.Handler {

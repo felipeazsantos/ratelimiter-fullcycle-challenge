@@ -9,13 +9,13 @@ import (
 )
 
 type RateLimiterUseCase struct {
-	Repo repository.IRateLimiterRepository
+	Repo        repository.IRateLimiterRepository
 	RateLimiter *domain.RateLimiter
 }
 
-func NewRateLimiter(redisRepo repository.IRateLimiterRepository, rl *domain.RateLimiter) *RateLimiterUseCase {
+func NewRateLimiterUseCase(repo repository.IRateLimiterRepository, rl *domain.RateLimiter) *RateLimiterUseCase {
 	return &RateLimiterUseCase{
-		Repo: redisRepo,
+		Repo:        repo,
 		RateLimiter: rl,
 	}
 }
@@ -24,11 +24,11 @@ func (useCase *RateLimiterUseCase) Execute(w http.ResponseWriter, r *http.Reques
 	token := r.Header.Get("token")
 	if token != "" {
 		isAllowedToken, err := useCase.Repo.AllowToken(
-			useCase.RateLimiter.Context, 
-			token, 
-			useCase.RateLimiter.TokenRateLimiterMaxRequest, 
+			useCase.RateLimiter.Context,
+			token,
+			useCase.RateLimiter.TokenRateLimiterMaxRequest,
 			useCase.RateLimiter.TokenRateLimiterBlockTime)
-		
+
 		if err != nil {
 			return false, fmt.Errorf("error validating token: %v", err)
 		}
@@ -38,9 +38,9 @@ func (useCase *RateLimiterUseCase) Execute(w http.ResponseWriter, r *http.Reques
 
 	clientIP := r.RemoteAddr
 	isAllowedIP, err := useCase.Repo.AllowIP(
-		useCase.RateLimiter.Context, 
-		clientIP, 
-		useCase.RateLimiter.IPRateLimiterMaxRequest, 
+		useCase.RateLimiter.Context,
+		clientIP,
+		useCase.RateLimiter.IPRateLimiterMaxRequest,
 		useCase.RateLimiter.IPRateLimiterBlockTime)
 
 	if err != nil {
