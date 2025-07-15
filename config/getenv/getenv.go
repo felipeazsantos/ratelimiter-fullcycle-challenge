@@ -14,6 +14,16 @@ type appConfig struct {
 
 var AppConfig *appConfig
 
+func NewAppConfig(ipMax, tokenMax int, ipBlock, tokenBlock, redisAddr string) *appConfig {
+	return &appConfig{
+		IPRateLimiterMaxRequest:    ipMax,
+		IPRateLimiterBlockTime:     ipBlock,
+		TokenRateLimiterMaxRequest: tokenMax,
+		TokenRateLimiterBlockTime:  tokenBlock,
+		RedisAddr:                  redisAddr,
+	}
+}
+
 func InitConfig(path string) error {
 	config := &appConfig{}
 

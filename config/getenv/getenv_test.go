@@ -26,6 +26,22 @@ func TestInitConfig_FilePathError(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestNewAppConfig(t *testing.T) {
+	ipMax := 10
+	tokenMax := 20
+	ipBlock := "10m"
+	tokenBlock := "5m"
+	redisAddr := "localhost:6379"
+
+	cfg := NewAppConfig(ipMax, tokenMax, ipBlock, tokenBlock, redisAddr)
+
+	assert.Equal(t, ipMax, cfg.IPRateLimiterMaxRequest)
+	assert.Equal(t, tokenMax, cfg.TokenRateLimiterMaxRequest)
+	assert.Equal(t, ipBlock, cfg.IPRateLimiterBlockTime)
+	assert.Equal(t, tokenBlock, cfg.TokenRateLimiterBlockTime)
+	assert.Equal(t, redisAddr, cfg.RedisAddr)
+}
+
 func TestInitConfig_UnmarshallError(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "invalidenv")
 	assert.NoError(t, err)
