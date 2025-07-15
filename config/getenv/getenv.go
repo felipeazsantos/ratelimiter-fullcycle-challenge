@@ -19,7 +19,9 @@ func InitConfig(path string) error {
 
 	viper.SetConfigFile(path)
 	viper.SetConfigType("env")
-	viper.ReadInConfig()
+	if err := viper.ReadInConfig(); err != nil {
+		return err
+	}
 	viper.AutomaticEnv()
 
 	if err := viper.Unmarshal(&config); err != nil {
