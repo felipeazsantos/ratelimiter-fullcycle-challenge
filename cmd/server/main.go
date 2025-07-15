@@ -18,7 +18,7 @@ func main() {
 
 	router := chi.NewRouter()
 
-	rdb := redisdb.NewRedisClient()
+	rdb := redisdb.NewRedisClient(getenv.AppConfig.RedisAddr)
 	defer rdb.Close()
 
 	if err := app.StartDependencies(router, rdb); err != nil {
