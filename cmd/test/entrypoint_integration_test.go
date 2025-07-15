@@ -30,16 +30,15 @@ const (
 // Limpa as chaves de teste do Redis
 func cleanupTestKeys(rdb *redis.Client) {
 	ctx := context.Background()
-	// Adapte os padrões abaixo conforme os prefixos usados no seu sistema de rate limit
 	ipKeys := []string{
-		"ratelimit:ip:1.2.3.4",
-		"ratelimit:ip:7.7.7.7",
-		"ratelimit:ip:1.2.3.4", // para isolation
+		"1.2.3.4:3333",
+		"7.7.7.7:4444",
+		"1.2.3.4:5555",
 	}
 	tokenKeys := []string{
-		"ratelimit:token:integration-token-123",
-		"ratelimit:token:isolation-token-1",
-		"ratelimit:token:isolation-token-2",
+		"integration-token-123",
+		"isolation-token-1",
+		"isolation-token-2",
 	}
 	for _, key := range ipKeys {
 		rdb.Del(ctx, key)
@@ -92,13 +91,15 @@ func TestRateLimiter_IP(t *testing.T) {
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusMethodNotAllowed, resp.StatusCode)
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	assert.NoError(t, err)
 	assert.Contains(t, string(body), "maximum number of requests")
 	resp.Body.Close()
 
 	// After block time
 	t.Logf("Waiting %v to test unblock...", blockTime)
 	time.Sleep(blockTime + time.Second)
+
 	// should allow again
 	req, _ = http.NewRequest("GET", ts.URL+"/", nil)
 	req.RemoteAddr = TestIP1
@@ -119,7 +120,7 @@ func TestRateLimiter_Token(t *testing.T) {
 	blockTime, _ := time.ParseDuration(getenv.AppConfig.TokenRateLimiterBlockTime)
 	token := TestTokenIntegration
 
-	for i := 0; i < maxRequests; i++ {
+	for range maxRequests {
 		req, _ := http.NewRequest("GET", ts.URL+"/", nil)
 		req.Header.Set("API_KEY", token)
 		resp, err := client.Do(req)
@@ -134,13 +135,15 @@ func TestRateLimiter_Token(t *testing.T) {
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusMethodNotAllowed, resp.StatusCode)
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	assert.NoError(t, err)
 	assert.Contains(t, string(body), "maximum number of requests")
 	resp.Body.Close()
 
 	// After block time
 	t.Logf("Waiting %v to test unblock...", blockTime)
 	time.Sleep(blockTime + time.Second)
+
 	// should allow again
 	req, _ = http.NewRequest("GET", ts.URL+"/", nil)
 	req.Header.Set("API_KEY", token)
@@ -157,9 +160,10 @@ func TestRateLimiter_Isolation(t *testing.T) {
 	defer cleanupTestKeys(rdb)
 
 	client := &http.Client{}
+
 	// IP1 hits the limit
 	maxRequests := getenv.AppConfig.IPRateLimiterMaxRequest
-	for i := 0; i < maxRequests; i++ {
+	for range maxRequests {
 		req, _ := http.NewRequest("GET", ts.URL+"/", nil)
 		req.RemoteAddr = TestIP1Isolation
 		resp, err := client.Do(req)
@@ -167,12 +171,15 @@ func TestRateLimiter_Isolation(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		resp.Body.Close()
 	}
+
 	// IP1 blocked
 	req, _ := http.NewRequest("GET", ts.URL+"/", nil)
 	req.RemoteAddr = TestIP1Isolation
 	resp, err := client.Do(req)
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusMethodNotAllowed, resp.StatusCode)
 	resp.Body.Close()
+
 	// IP2 should pass normally
 	req, _ = http.NewRequest("GET", ts.URL+"/", nil)
 	req.RemoteAddr = TestIP2
@@ -185,7 +192,8 @@ func TestRateLimiter_Isolation(t *testing.T) {
 	maxToken := getenv.AppConfig.TokenRateLimiterMaxRequest
 	token1 := TestTokenIsolation1
 	token2 := TestTokenIsolation2
-	for i := 0; i < maxToken; i++ {
+
+	for range maxToken {
 		req, _ := http.NewRequest("GET", ts.URL+"/", nil)
 		req.Header.Set("API_KEY", token1)
 		resp, err := client.Do(req)
@@ -193,12 +201,15 @@ func TestRateLimiter_Isolation(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		resp.Body.Close()
 	}
+
 	// Token1 blocked
 	req, _ = http.NewRequest("GET", ts.URL+"/", nil)
 	req.Header.Set("API_KEY", token1)
 	resp, err = client.Do(req)
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusMethodNotAllowed, resp.StatusCode)
 	resp.Body.Close()
+
 	// Token2 should pass normalmente
 	req, _ = http.NewRequest("GET", ts.URL+"/", nil)
 	req.Header.Set("API_KEY", token2)
