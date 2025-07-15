@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	if err := getenv.InitConfig(".env"); err != nil {
+	if err := getenv.InitConfig("../../.env"); err != nil {
 		log.Fatal("unable to load app config: ", err)
 	}
 

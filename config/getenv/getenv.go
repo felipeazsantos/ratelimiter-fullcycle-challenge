@@ -6,9 +6,9 @@ import (
 
 type appConfig struct {
 	IPRateLimiterMaxRequest    int    `mapstructure:"RATE_LIMITER_IP_MAX_REQUESTS"`
-	IPRateLimiterBlockTime     int    `mapstructure:"RATE_LIMITER_IP_BLOCK_TIME"`
+	IPRateLimiterBlockTime     string    `mapstructure:"RATE_LIMITER_IP_BLOCK_TIME"`
 	TokenRateLimiterMaxRequest int    `mapstructure:"RATE_LIMITER_TOKEN_MAX_REQUESTS"`
-	TokenRateLimiterBlockTime  int    `mapstructure:"RATE_LIMITER_TOKEN_BLOCK_TIME"`
+	TokenRateLimiterBlockTime  string    `mapstructure:"RATE_LIMITER_TOKEN_BLOCK_TIME"`
 	RedisAddr                  string `mapstructure:"REDIS_ADDR"`
 }
 

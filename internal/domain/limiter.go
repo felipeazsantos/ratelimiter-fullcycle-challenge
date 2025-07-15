@@ -6,16 +6,16 @@ import (
 
 type RateLimiter struct {
 	IPRateLimiterMaxRequest    int
-	IPRateLimiterBlockTime     int
+	IPRateLimiterBlockTime     string
 	TokenRateLimiterMaxRequest int
-	TokenRateLimiterBlockTime  int
+	TokenRateLimiterBlockTime  string
 	Context                    context.Context
 }
 
-func NewRateLimiter(ipRateLimiterMaxRequest,
-	ipRateLimiterBlockTime,
-	tokenRateLimiterMaxRequest,
-	tokenRateLimiterBlockTime int) *RateLimiter {
+func NewRateLimiter(ipRateLimiterMaxRequest int,
+	ipRateLimiterBlockTime string,
+	tokenRateLimiterMaxRequest int,
+	tokenRateLimiterBlockTime string) *RateLimiter {
 	return &RateLimiter{
 		IPRateLimiterMaxRequest:    ipRateLimiterMaxRequest,
 		IPRateLimiterBlockTime:     ipRateLimiterBlockTime,

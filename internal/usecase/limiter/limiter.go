@@ -7,6 +7,7 @@ import (
 
 	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/domain"
 	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/repository"
+	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/statics"
 )
 
 type RateLimiterUseCase struct {
@@ -22,7 +23,7 @@ func NewRateLimiterUseCase(repo repository.IRateLimiterRepository, rl *domain.Ra
 }
 
 func (useCase *RateLimiterUseCase) Execute(w http.ResponseWriter, r *http.Request) (bool, error) {
-	token := r.Header.Get("token")
+	token := r.Header.Get(statics.API_KEY)
 	if token != "" {
 		isAllowedToken, err := useCase.Repo.AllowToken(
 			useCase.RateLimiter.Context,
@@ -37,7 +38,11 @@ func (useCase *RateLimiterUseCase) Execute(w http.ResponseWriter, r *http.Reques
 		return isAllowedToken, nil
 	}
 
-	clientIP, _, _ := net.SplitHostPort(r.RemoteAddr)
+	clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return false, fmt.Errorf("error parse ip: %v", err)
+	}
+
 	isAllowedIP, err := useCase.Repo.AllowIP(
 		useCase.RateLimiter.Context,
 		clientIP,
@@ -45,7 +50,7 @@ func (useCase *RateLimiterUseCase) Execute(w http.ResponseWriter, r *http.Reques
 		useCase.RateLimiter.IPRateLimiterBlockTime)
 
 	if err != nil {
-		return false, fmt.Errorf("error validating token: %v", err)
+		return false, fmt.Errorf("error validating ip: %v", err)
 	}
 
 	return isAllowedIP, nil

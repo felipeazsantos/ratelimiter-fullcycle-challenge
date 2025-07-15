@@ -1,13 +1,15 @@
 package redisdb
 
-import "github.com/redis/go-redis/v9"
-
+import (
+	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/config/getenv"
+	"github.com/redis/go-redis/v9"
+)
 
 func NewRedisClient() *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr:     getenv.AppConfig.RedisAddr,
 		Password: "",
-		DB: 0,
+		DB:       0,
 	})
 
 	return rdb
