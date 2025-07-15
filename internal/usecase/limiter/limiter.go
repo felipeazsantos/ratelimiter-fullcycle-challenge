@@ -10,6 +10,10 @@ import (
 	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/statics"
 )
 
+type RateLimiterExecutor interface {
+	Execute(w http.ResponseWriter, r *http.Request) (bool, error)
+}
+
 type RateLimiterUseCase struct {
 	Repo        repository.IRateLimiterRepository
 	RateLimiter *domain.RateLimiter

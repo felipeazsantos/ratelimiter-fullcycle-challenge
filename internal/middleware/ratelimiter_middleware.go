@@ -6,7 +6,7 @@ import (
 	usecase "github.com/felipeazsantos/ratelimiter-fullcycle-challenge/internal/usecase/limiter"
 )
 
-func RateLimiterMiddleware(useCase *usecase.RateLimiterUseCase, next http.Handler) http.Handler {
+func RateLimiterMiddleware(useCase usecase.RateLimiterExecutor, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		allow, err := useCase.Execute(w, r)
 
