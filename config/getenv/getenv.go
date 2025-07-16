@@ -24,21 +24,23 @@ func NewAppConfig(ipMax, tokenMax int, ipBlock, tokenBlock, redisAddr string) *a
 	}
 }
 
-func InitConfig(path string) error {
+func InitConfig(paths ...string) error {
 	config := &appConfig{}
 
-	viper.SetConfigFile(path)
-	viper.SetConfigType("env")
-	if err := viper.ReadInConfig(); err != nil {
-		return err
+	var lastErr error
+	for _, path := range paths {
+		viper.SetConfigFile(path)
+		viper.SetConfigType("env")
+		if err := viper.ReadInConfig(); err == nil {
+			viper.AutomaticEnv()
+			if err := viper.Unmarshal(&config); err != nil {
+				return err
+			}
+			AppConfig = config
+			return nil
+		} else {
+			lastErr = err
+		}
 	}
-	viper.AutomaticEnv()
-
-	if err := viper.Unmarshal(&config); err != nil {
-		return err
-	}
-
-	AppConfig = config
-
-	return nil
+	return lastErr
 }
