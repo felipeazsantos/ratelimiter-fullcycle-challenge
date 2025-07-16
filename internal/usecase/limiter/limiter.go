@@ -42,14 +42,18 @@ func (useCase *RateLimiterUseCase) Execute(w http.ResponseWriter, r *http.Reques
 		return isAllowedToken, nil
 	}
 
-	clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		return false, fmt.Errorf("error parse ip: %v", err)
+	ip := r.Header.Get("X-Forwarded-For")
+	if ip == "" {
+		var err error
+		ip, _, err = net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			return false, fmt.Errorf("error parse ip: %v", err)
+		}
 	}
 
 	isAllowedIP, err := useCase.Repo.AllowIP(
 		useCase.RateLimiter.Context,
-		clientIP,
+		ip,
 		useCase.RateLimiter.IPRateLimiterMaxRequest,
 		useCase.RateLimiter.IPRateLimiterBlockTime)
 

@@ -1,13 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-	"context"
 
 	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/config/app"
 	"github.com/felipeazsantos/ratelimiter-fullcycle-challenge/config/getenv"
@@ -165,7 +165,7 @@ func TestRateLimiter_Isolation(t *testing.T) {
 	maxRequests := getenv.AppConfig.IPRateLimiterMaxRequest
 	for range maxRequests {
 		req, _ := http.NewRequest("GET", ts.URL+"/", nil)
-		req.RemoteAddr = TestIP1Isolation
+		req.Header.Set("X-Forwarded-For", TestIP1Isolation)
 		resp, err := client.Do(req)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -174,7 +174,7 @@ func TestRateLimiter_Isolation(t *testing.T) {
 
 	// IP1 blocked
 	req, _ := http.NewRequest("GET", ts.URL+"/", nil)
-	req.RemoteAddr = TestIP1Isolation
+	req.Header.Set("X-Forwarded-For", TestIP1Isolation)
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusMethodNotAllowed, resp.StatusCode)
@@ -182,7 +182,7 @@ func TestRateLimiter_Isolation(t *testing.T) {
 
 	// IP2 should pass normally
 	req, _ = http.NewRequest("GET", ts.URL+"/", nil)
-	req.RemoteAddr = TestIP2
+	req.Header.Set("X-Forwarded-For", TestIP2)
 	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
